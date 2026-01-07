@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <title>COMPARE</title>
+    <link rel="stylesheet" href="style.css"> 
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    
+    <style>
+        .catalog-section { padding: 40px 20px; }
+        .compare-section { 
+            background: rgba(0,0,0,0.2); 
+            padding: 50px 20px; 
+            margin-top: 50px;
+            border-top: 2px solid #ffd700;
+        }
+        .product { color: #333; background: white; }
+        .spec { border-bottom: 1px solid #eee; padding: 8px 0; display: flex; justify-content: space-between;}
+        .admin-panel { text-align: center; margin-bottom: 18px; }
+        .admin-panel .add-form { max-width: 920px; margin: 12px auto 0 auto; text-align: left; display: none; padding: 14px; border-radius: 12px; background: rgba(255,255,255,0.03); }
+        .admin-panel .add-form .row { display:flex; gap:12px; }
+        .admin-panel label { display:block; margin-bottom:6px; color:#fff; font-weight:600; }
+        .admin-panel input, .admin-panel select, .admin-panel textarea { width:100%; padding:10px; border-radius:8px; border:1px solid rgba(255,255,255,0.06); background: rgba(0,0,0,0.12); color:#fff; }
+    </style>
+
+    <script>
+        const laptops = [
+            { id: 1, name: "Acer Aspire 5", img: "https://tse2.mm.bing.net/th/id/OIP.hxI2piQX28sIYTeaEwD4DwHaEn?pid=Api&h=220&P=0", cpu: "Intel i5", ram: "8GB", storage: "512GB SSD", harga: "Rp 8.000.000" },
+            { id: 2, name: "Asus VivoBook", img: "https://tse3.mm.bing.net/th/id/OIP.APeEC-rwhBAAZuH4SaXh0QHaE2?pid=Api&h=220&P=0", cpu: "AMD Ryzen 5", ram: "16GB", storage: "1TB SSD", harga: "Rp 10.000.000" },
+            { id: 3, name: "Lenovo ThinkPad", img: "https://www.notebookcheck.net/fileadmin/Notebooks/Lenovo/ThinkPad_X1_Carbon_2017-20HQS03P00_/teaser_4_3.JPG", cpu: "Intel i7", ram: "16GB", storage: "512GB SSD", harga: "Rp 12.000.000" },
+            { id: 4, name: "HP Pavilion", img: "https://www.notebookcheck.net/fileadmin/Notebooks/HP/Pavilion_15-cs0003ng/HP_Pavilion_15_cs0003ng_1.jpg", cpu: "Intel i5", ram: "12GB", storage: "512GB SSD", harga: "Rp 9.500.000" },
+            { id: 5, name: "Dell Inspiron", img: "https://laptopmedia.com/wp-content/uploads/2023/09/4-26-scaled-e1695980959438.jpg", cpu: "AMD Ryzen 7", ram: "16GB", storage: "1TB SSD", harga: "Rp 11.000.000" },
+            { id: 6, name: "MSI Modern", img: "https://pisces.bbystatic.com/image2/BestBuy_US/images/products/6427/6427572cv1d.jpg", cpu: "Intel i7", ram: "16GB", storage: "512GB SSD", harga: "Rp 13.000.000" },
+            { id: 7, name: "Huawei MateBook D", img: "https://i0.wp.com/www.amd-id.com/wp-content/uploads/2020/05/Kesimpulan-Huawei-MateBook-D14.jpg?resize=696%2C347&ssl=1", cpu: "AMD Ryzen 5", ram: "8GB", storage: "512GB SSD", harga: "Rp 9.000.000" },
+            { id: 8, name: "Microsoft Surface Laptop", img: "https://images-cdn.ubuy.co.id/6679573e3c46b622b13af1e0-microsoft-surface-laptop-go-12-4.jpg", cpu: "Intel i5", ram: "8GB", storage: "256GB SSD", harga: "Rp 11.500.000" },
+            { id: 9, name: "Apple MacBook Air (M1)", img: "https://i.ebayimg.com/00/s/MTE0MFgxMTQw/z/6ZsAAOSwUtJm9T0O/$_57.JPG?set_id=880000500F", cpu: "Apple M1", ram: "8GB", storage: "256GB SSD", harga: "Rp 14.000.000" },
+            { id: 10, name: "Razer Blade Stealth", img: "https://blossomzones.com/wp-content/uploads/2019/07/BLADE-STEALTH-13.jpg", cpu: "Intel i7", ram: "16GB", storage: "512GB SSD", harga: "Rp 20.000.000" },
+            { id: 11, name: "LG Gram", img: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQY6HIVFkNwtjs2t_s67TjJ7uR5GM_uVUShrg&s", cpu: "Intel i5", ram: "8GB", storage: "512GB SSD", harga: "Rp 13.500.000" },
+            { id: 12, name: "Samsung Galaxy Book", img: "https://gizmologi.id/wp-content/uploads/2021/04/Samsung-Galaxy-Book-Pro-360-001.jpg", cpu: "Intel i7", ram: "16GB", storage: "512GB SSD", harga: "Rp 15.000.000" }
+        ];
+
+        function renderAll() {
+            renderCatalog();
+            renderCompare();
+        }
+
+        // load extra laptops saved in localStorage (persist user additions)
+        (function loadExtras(){
+            try {
+                const extras = JSON.parse(localStorage.getItem('catalog_extra') || '[]');
+                if (Array.isArray(extras) && extras.length) {
+                    let maxId = Math.max(...laptops.map(l=>l.id));
+                    extras.forEach(ex => { maxId++; laptops.push(Object.assign({id: maxId}, ex)); });
+                }
+            } catch(e) { /* ignore */ }
+        })();
+
+        function renderCatalog() {
+            const grid = document.getElementById('laptop-grid');
+            grid.innerHTML = laptops.map(laptop => `
+                <div class="card">
+                    <img src="${laptop.img}" alt="${laptop.name}">
+                    <h3>${laptop.name}</h3>
+                    <p>${laptop.cpu} | ${laptop.ram}</p>
+                    <button onclick="addToCompare(${laptop.id})">Tambah ke Perbandingan</button>
+                </div>
+            `).join('');
+        }
+
+        function addToCompare(id) {
+            let selected = JSON.parse(localStorage.getItem('compare')) || [];
+            if (selected.includes(id)) return Swal.fire('Sudah ada!', '', 'info');
+            if (selected.length >= 3) return Swal.fire('Maksimal 3 laptop!', '', 'warning');
+            
+            selected.push(id);
+            localStorage.setItem('compare', JSON.stringify(selected));
+            renderCompare();
+            Swal.fire('Ditambahkan!', '', 'success');
+        }
+
+        function renderCompare() {
+            const selectedIds = JSON.parse(localStorage.getItem('compare')) || [];
+            const container = document.getElementById('compare-container');
+            const recEl = document.getElementById('recommendation');
+            
+            if (selectedIds.length === 0) {
+                container.innerHTML = "<p style='color:white'>Belum ada laptop yang dipilih untuk dibanding.</p>";
+                recEl.innerHTML = '';
+                return;
+            }
+
+            container.innerHTML = selectedIds.map(id => {
+                const laptop = laptops.find(l => l.id === id);
+                return `
+                    <div class="product">
+                        <h3>${laptop.name}</h3>
+                        <div class="spec"><span>CPU</span><strong>${laptop.cpu}</strong></div>
+                        <div class="spec"><span>RAM</span><strong>${laptop.ram}</strong></div>
+                        <div class="spec"><span>Storage</span><strong>${laptop.storage}</strong></div>
+                        <div class="spec"><span>Harga</span><strong style="color:green">${laptop.harga}</strong></div>
+                        <button class="hapus" onclick="removeFromCompare(${laptop.id})">Hapus</button>
+                    </div>
+                `;
+            }).join('');
+
+            // render recommendation after the compare cards
+            renderRecommendation(selectedIds);
+        }
+
+        function renderRecommendation(selectedIds) {
+            const recEl = document.getElementById('recommendation');
+            if (!selectedIds || selectedIds.length === 0) { recEl.innerHTML = ''; return; }
+
+            const selected = selectedIds.map(id => laptops.find(l => l.id === id)).filter(Boolean);
+
+            const parsePrice = s => Number(String(s).replace(/[^0-9]/g, '')) || 0;
+            const parseRam = s => Number(String(s).replace(/[^0-9]/g, '')) || 0;
+            const parseStorageGB = s => {
+                const str = String(s).toUpperCase();
+                const n = Number(str.replace(/[^0-9]/g,'') || 0);
+                if (str.includes('TB')) return n * 1000;
+                return n;
+            };
+
+            const prices = selected.map(s => parsePrice(s.harga));
+            const maxPrice = Math.max(...prices);
+
+            const scored = selected.map(s => {
+                let cpuScore = 10;
+                const cpu = s.cpu || '';
+                if (/i9|RYZEN 9/i.test(cpu)) cpuScore = 40;
+                else if (/i7|RYZEN 7/i.test(cpu)) cpuScore = 30;
+                else if (/i5|RYZEN 5/i.test(cpu)) cpuScore = 20;
+
+                const ramGB = parseRam(s.ram);
+                const ramScore = Math.min(ramGB / 32, 1) * 25;
+
+                const storageGB = parseStorageGB(s.storage);
+                const storageScore = Math.min(storageGB / 1000, 1) * 10;
+
+                const price = parsePrice(s.harga);
+                const priceScore = maxPrice > 0 ? ((maxPrice - price) / maxPrice) * 25 : 0;
+
+                const total = cpuScore + ramScore + storageScore + priceScore;
+                return { s, total, cpuScore, ramScore, storageScore, priceScore };
+            });
+
+            scored.sort((a,b) => b.total - a.total);
+            const best = scored[0];
+            const cheapest = scored.reduce((p,c) => (parsePrice(c.s.harga) < parsePrice(p.s.harga) ? c : p), scored[0]);
+
+            const lines = [];
+            lines.push(`<h3 style="margin-top:0;color:#ffd700">Rekomendasi Pintar</h3>`);
+            lines.push(`<p style="font-weight:700;">Pilihan terbaik: <span style="color:#ffd700">${best.s.name}</span></p>`);
+            lines.push(`<p>Kenapa pilih ini? Karena memiliki <strong>${best.s.cpu}</strong>, RAM <strong>${best.s.ram}</strong>, dan storage <strong>${best.s.storage}</strong> — kombinasi yang kuat untuk tugas sehari-hari hingga multitasking.</p>`);
+
+            if (cheapest.s.name !== best.s.name) {
+                lines.push(`<p style="margin-top:8px">Jika Anda lebih memprioritaskan harga, pertimbangkan <strong>${cheapest.s.name}</strong> dengan harga ${cheapest.s.harga}.</p>`);
+            }
+
+            lines.push(`<p style="margin-top:10px;color:#ffd700">Tip: Jika Anda sering melakukan pengolahan data atau gaming ringan, fokus pada CPU & RAM. Untuk penyimpanan besar, perhatikan kapasitas SSD.</p>`);
+
+            recEl.innerHTML = lines.join('');
+        }
+
+        function removeFromCompare(id) {
+            let selected = JSON.parse(localStorage.getItem('compare')) || [];
+            selected = selected.filter(i => i !== id);
+            localStorage.setItem('compare', JSON.stringify(selected));
+            renderCompare();
+        }
+
+        window.onload = renderAll;
+    </script>
+    <script>
+        // admin form behavior: toggle and add laptop
+        document.addEventListener('DOMContentLoaded', () => {
+            const toggle = document.getElementById('toggle-add');
+            const form = document.getElementById('add-form');
+            const addBtn = document.getElementById('add-laptop');
+
+            if (toggle && form) {
+                toggle.addEventListener('click', () => { form.style.display = form.style.display === 'none' || form.style.display === '' ? 'block' : 'none'; });
+            }
+
+            if (addBtn) {
+                addBtn.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    const name = document.getElementById('new-name').value.trim();
+                    const cpu = document.getElementById('new-cpu').value.trim();
+                    const ram = document.getElementById('new-ram').value.trim();
+                    const storage = document.getElementById('new-storage').value.trim();
+                    const harga = document.getElementById('new-price').value.trim();
+                    const img = document.getElementById('new-img').value.trim() || '';
+
+                    if (!name || !cpu) return Swal.fire('Nama & CPU diperlukan', '', 'warning');
+
+                    // assign new id
+                    const maxId = Math.max(...laptops.map(l=>l.id));
+                    const newId = (isFinite(maxId) ? maxId : 0) + 1;
+                    const newItem = { id: newId, name, img, cpu, ram: ram || '-', storage: storage || '-', harga: harga || '-' };
+                    laptops.push(newItem);
+
+                    // persist minimal data (without id) so future loads can reassign ids
+                    try {
+                        const extras = JSON.parse(localStorage.getItem('catalog_extra') || '[]');
+                        extras.push({ name, img, cpu, ram: ram || '-', storage: storage || '-', harga: harga || '-' });
+                        localStorage.setItem('catalog_extra', JSON.stringify(extras));
+                    } catch(e) {}
+
+                    renderCatalog();
+                    Swal.fire('Berhasil', 'Laptop ditambahkan ke katalog.', 'success');
+                    // clear form
+                    ['new-name','new-cpu','new-ram','new-storage','new-price','new-img'].forEach(id=>document.getElementById(id).value='');
+                });
+            }
+        });
+    </script>
+</head>
+<body>
+    <header>
+        <div class="brand">
+            <img src="logo.png" alt="Logo" class="logo">
+            <h1>Check & Compare</h1>
+        </div>
+        <nav>
+            <a href="index.html">Back to Home</a>
+            <a href="contact.html" class="button contact-btn">Contact Us</a>
+        </nav>
+    </header>
+
+    <div class="catalog-section">
+        <h2 style="text-align: center;">Pilih Laptop Yang Mau Dibandingkan</h2>
+
+        <div class="admin-panel">
+            <button id="toggle-add" class="button">Tambah Laptop Baru</button>
+            <div class="add-form" id="add-form">
+                <div style="display:flex;gap:12px;flex-wrap:wrap;">
+                    <div style="flex:1;min-width:200px;">
+                        <label for="new-name">Nama</label>
+                        <input id="new-name" type="text" placeholder="Nama laptop">
+                    </div>
+                    <div style="flex:1;min-width:200px;">
+                        <label for="new-cpu">CPU</label>
+                        <input id="new-cpu" type="text" placeholder="contoh: Intel i5">
+                    </div>
+                    <div style="flex:1;min-width:200px;">
+                        <label for="new-ram">RAM</label>
+                        <input id="new-ram" type="text" placeholder="contoh: 8GB">
+                    </div>
+                </div>
+                <div style="display:flex;gap:12px;margin-top:10px;flex-wrap:wrap;">
+                    <div style="flex:1;min-width:200px;">
+                        <label for="new-storage">Storage</label>
+                        <input id="new-storage" type="text" placeholder="contoh: 512GB SSD">
+                    </div>
+                    <div style="flex:1;min-width:200px;">
+                        <label for="new-price">Harga</label>
+                        <input id="new-price" type="text" placeholder="contoh: Rp 9.000.000">
+                    </div>
+                    <div style="flex:1;min-width:200px;">
+                        <label for="new-img">URL Foto (opsional)</label>
+                        <input id="new-img" type="text" placeholder="https://...">
+                    </div>
+                </div>
+                <div style="text-align:right;margin-top:12px;">
+                    <button id="add-laptop" class="button">Tambahkan</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="grid" id="laptop-grid"></div>
+    </div>
+
+    <div class="compare-section" id="compare-section">
+        <h2 style="text-align: center; color: #ffd700;">Hasil Perbandingan</h2>
+        <div class="compare-container" id="compare-container"></div>
+        <div id="recommendation" class="recommendation"></div>
+    </div>
+
+    <footer>
+        <p>&copy; 2026 TIM SENANDIKA : <a href="https://itpln.ac.id/" target="_blank" rel="noopener">ITPLN</a></p>
+    </footer>
+</body>
+</html>
